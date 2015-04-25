@@ -31,16 +31,15 @@ end
 
 procs.pop
 
-# reason!
-jvm_heap = 515420
+jvm_heap = procs.select{|proc| proc[:size] == 260608 and proc[:name].empty? }
 
 tot_kb = procs.inject(0) do |sum, proc|
   sum + proc[:rss]
 end
 
-tot_kb_non_app = procs.inject(0) do |sum, proc|
-  sum + (proc[:name].empty? ? proc[:rss] : 0)
-end
+#tot_kb_non_app = procs.inject(0) do |sum, proc|
+  #sum + (proc[:name].empty? ? proc[:rss] : 0)
+#end
 
 tot_kb_lib = procs.inject(0) do |sum, proc|
   sum + ((proc[:name].start_with?("/lib") or proc[:name].include?(".jdk")) ? proc[:rss] : 0)
@@ -54,18 +53,19 @@ buffers = procs.select {|proc| proc[:name].empty? and proc[:rss] > 500 }
 
 stacks = procs.select{|proc| proc[:name].start_with?("[stack") }
 
-threads = procs.select{|proc| proc[:size] > 1000 and proc[:size] < 1200 and proc[:name].empty? }
+threads = procs.select{|proc| proc[:size] == 504 and proc[:name].empty? }
 
+jvm_heap_kb = jvm_heap.inject(0){|sum, p| sum + p[:rss]}
 stack_kb = stacks.inject(0){|sum, p| sum + p[:rss]}
 thread_kb = threads.inject(0){|sum, p| sum + p[:rss]}
-buffer_kb = buffers.inject(0){|sum, p| sum + p[:rss]} - jvm_heap
+buffer_kb = buffers.inject(0){|sum, p| sum + p[:rss]} - jvm_heap_kb
 
-puts "[heap]  kB: #{tot_kb_heap}"
-puts "[stack] kB: #{stack_kb} / #{stacks.size}"
-puts "threads kB: #{thread_kb} / #{threads.size}"
-puts "libs    kB: #{tot_kb_lib}"
-puts "buffers kB: #{buffer_kb} / #{buffers.size}"
-puts "KNOWN   kB: #{jvm_heap + tot_kb_heap + thread_kb + tot_kb_lib}"
+puts "[heap]   kB: #{tot_kb_heap}"
+puts "[stack]  kB: #{stack_kb} / #{stacks.size}"
+puts "threads  kB: #{thread_kb} / #{threads.size}"
+puts "libs     kB: #{tot_kb_lib}"
+puts "buffers  kB: #{buffer_kb} / #{buffers.size}"
+puts "JVM Heap kB: #{jvm_heap_kb}"
+puts "KNOWN    kB: #{jvm_heap_kb + tot_kb_heap + thread_kb + tot_kb_lib}"
 
-
-puts "Total  kB: #{tot_kb}"
+puts "Total    kB: #{tot_kb}"
