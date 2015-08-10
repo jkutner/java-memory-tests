@@ -31,7 +31,7 @@ end
 
 procs.pop
 
-jvm_heap = procs.select{|proc| proc[:size] == 260608 and proc[:name].empty? }
+jvm_heap = procs.select{|proc| [794920].include?(proc[:size]) and proc[:name].empty? }
 
 tot_kb = procs.inject(0) do |sum, proc|
   sum + proc[:rss]
@@ -60,12 +60,30 @@ stack_kb = stacks.inject(0){|sum, p| sum + p[:rss]}
 thread_kb = threads.inject(0){|sum, p| sum + p[:rss]}
 buffer_kb = buffers.inject(0){|sum, p| sum + p[:rss]} - jvm_heap_kb
 
-puts "[heap]   kB: #{tot_kb_heap}"
-puts "[stack]  kB: #{stack_kb} / #{stacks.size}"
-puts "threads  kB: #{thread_kb} / #{threads.size}"
-puts "libs     kB: #{tot_kb_lib}"
-puts "buffers  kB: #{buffer_kb} / #{buffers.size}"
-puts "JVM Heap kB: #{jvm_heap_kb}"
-puts "KNOWN    kB: #{jvm_heap_kb + tot_kb_heap + thread_kb + tot_kb_lib}"
+def format_kb(num)
+  if num < 10
+    "      #{num}"
+  elsif num < 100
+    "     #{num}"
+  elsif num < 1000
+    "    #{num}"
+  elsif num < 10000
+    "   #{num}"
+  elsif num < 100000
+    "  #{num}"
+  elsif num < 1000000
+    " #{num}"
+  else
+    "#{num}"
+  end
+end
 
-puts "Total    kB: #{tot_kb}"
+puts "#{format_kb tot_kb_heap} kB: OS Heap (not JVM heap)"
+puts "#{format_kb stack_kb} kB: Thread stacks (over #{stacks.size} threads)"
+#puts "#{format_kb thread_kb} kB: JVM Thread stacks (over #{threads.size} threads)"
+puts "#{format_kb tot_kb_lib} kB: Native libs (like libgcc, libnio, etc)"
+puts "#{format_kb buffer_kb} kB: Anonymous maps (over #{buffers.size} maps)"
+puts "#{format_kb jvm_heap_kb} kB: JVM Heap"
+#puts "#{jvm_heap_kb + tot_kb_heap + thread_kb + tot_kb_lib} kB: Known RSS"
+
+puts "#{format_kb tot_kb} kB: Total RSS"

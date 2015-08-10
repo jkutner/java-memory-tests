@@ -1,11 +1,13 @@
-import io.netty.buffer.*;
+//import io.netty.buffer.*;
+
+
 
 public class NettyBufferTest {
 
   private static Integer SIZE_OF_BUFFER = 42424242;
 
   public static void main(String[] args) throws Exception {
-    ByteBuf bb = Unpooled.buffer(SIZE_OF_BUFFER);
+    //ByteBuf bb = Unpooled.buffer(SIZE_OF_BUFFER);
 
     //bb = null;
     System.gc();
