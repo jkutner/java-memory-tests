@@ -31,15 +31,24 @@ end
 
 procs.pop
 
-jvm_heap = procs.select{|proc| [794920].include?(proc[:size]) and proc[:name].empty? }
+jvm_heap_alloc_index = 0
+procs.each_index do |x|
+  proc = procs[x]
+  if proc[:name].start_with?("[heap")
+    jvm_heap_alloc_index = x + 1
+    break
+  end
+end
+
+# jvm_heap_allocs = [402432,7168]
+jvm_heap_allocs = [procs[jvm_heap_alloc_index][:size]]
+# puts "Assuming Heap is #{jvm_heap_allocs}"
+
+jvm_heap = procs.select{|proc| jvm_heap_allocs.include?(proc[:size]) and proc[:name].empty? }
 
 tot_kb = procs.inject(0) do |sum, proc|
   sum + proc[:rss]
 end
-
-#tot_kb_non_app = procs.inject(0) do |sum, proc|
-  #sum + (proc[:name].empty? ? proc[:rss] : 0)
-#end
 
 tot_kb_lib = procs.inject(0) do |sum, proc|
   sum + ((proc[:name].start_with?("/lib") or proc[:name].include?(".jdk")) ? proc[:rss] : 0)
@@ -80,10 +89,7 @@ end
 
 puts "#{format_kb tot_kb_heap} kB: OS Heap (not JVM heap)"
 puts "#{format_kb stack_kb} kB: Thread stacks (over #{stacks.size} threads)"
-#puts "#{format_kb thread_kb} kB: JVM Thread stacks (over #{threads.size} threads)"
 puts "#{format_kb tot_kb_lib} kB: Native libs (like libgcc, libnio, etc)"
 puts "#{format_kb buffer_kb} kB: Anonymous maps (over #{buffers.size} maps)"
 puts "#{format_kb jvm_heap_kb} kB: JVM Heap"
-#puts "#{jvm_heap_kb + tot_kb_heap + thread_kb + tot_kb_lib} kB: Known RSS"
-
 puts "#{format_kb tot_kb} kB: Total RSS"
