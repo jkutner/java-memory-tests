@@ -12,7 +12,9 @@ procs = [{}]
 i = 0
 new_line = true
 
-File.readlines('smaps.txt').each do |line|
+smaps_file = ARGV[0] || "smaps.txt"
+
+File.readlines(smaps_file).each do |line|
   if line.start_with?("VmFlags")
     i += 1
     new_line = true
